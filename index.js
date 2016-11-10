@@ -1,44 +1,44 @@
 'use strict'
 
-var isFunction = require('lodash.isfunction');
-var browserSync = require('browser-sync');
-var ansiToHtml = require('ansi-to-html');
-var convert = new ansiToHtml();
+var isFunction = require('lodash.isfunction')
+var browserSync = require('browser-sync')
+var AnsiToHtml = require('ansi-to-html')
+var convert = new AnsiToHtml()
 
-function BrowserSyncPlugin(browserSyncOptions, pluginOptions) {
-  var self = this;
+function BrowserSyncPlugin (browserSyncOptions, pluginOptions) {
+  var self = this
 
   var defaultBrowserSyncOptions = {
-    plugins: ['bs-fullscreen-message']
+    plugins: ['bs-pretty-message']
   }
 
   var defaultPluginOptions = {
     reload: true,
     name: 'bs-webpack-plugin',
     callback: undefined
-  };
+  }
 
-  self.browserSyncOptions = Object.assign({}, defaultBrowserSyncOptions, browserSyncOptions);
-  self.options = Object.assign({}, defaultPluginOptions, pluginOptions);
+  self.browserSyncOptions = Object.assign({}, defaultBrowserSyncOptions, browserSyncOptions)
+  self.options = Object.assign({}, defaultPluginOptions, pluginOptions)
 
-  self.browserSync = browserSync.create(self.options.name);
-  self.isWebpackWatching = false;
-  self.isBrowserSyncRunning = false;
+  self.browserSync = browserSync.create(self.options.name)
+  self.isWebpackWatching = false
+  self.isBrowserSyncRunning = false
 }
 
 BrowserSyncPlugin.prototype.apply = function (compiler) {
-  var self = this;
+  var self = this
 
   compiler.plugin('done', function (stats) {
     if (stats.hasErrors() || stats.hasWarnings()) {
       var error = stats.toString('minimal')
       return self.browserSync.sockets.emit('fullscreen:message', {
         title: 'Webpack Error:',
-        body: convert.toHtml(error),
+        body: convert.toHtml(error)
       })
     } else {
       if (self.options.reload) {
-        self.browserSync.reload();
+        self.browserSync.reload()
       }
 
       return self.browserSync.sockets.emit('fullscreen:message:clear')
@@ -46,29 +46,29 @@ BrowserSyncPlugin.prototype.apply = function (compiler) {
   })
 
   compiler.plugin('watch-run', function (watching, callback) {
-    self.isWebpackWatching = true;
-    callback(null, null);
-  });
+    self.isWebpackWatching = true
+    callback(null, null)
+  })
 
   compiler.plugin('compilation', function () {
     if (self.isBrowserSyncRunning) {
-      self.browserSync.notify('Rebuilding...');
+      self.browserSync.notify('Rebuilding...')
     }
-  });
+  })
 
   compiler.plugin('done', function (stats) {
     if (self.isWebpackWatching) {
       if (!self.isBrowserSyncRunning) {
         if (isFunction(self.options.callback)) {
-          self.browserSync.init(self.browserSyncOptions, self.options.callback);
+          self.browserSync.init(self.browserSyncOptions, self.options.callback)
         } else {
-          self.browserSync.init(self.browserSyncOptions);
+          self.browserSync.init(self.browserSyncOptions)
         }
 
-        self.isBrowserSyncRunning = true;
+        self.isBrowserSyncRunning = true
       }
     }
-  });
-};
+  })
+}
 
-module.exports = BrowserSyncPlugin;
+module.exports = BrowserSyncPlugin
